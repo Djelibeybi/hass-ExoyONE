@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Please enter your ExoyOne mDNS hostname and IP address.",
+                "data": {
+                    "hostname": "Hostname (exoyoneXXXXX)",
+                    "ip_address": "IP address"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Unable to connect to ExoyONE."
+        }
+    }
+}
