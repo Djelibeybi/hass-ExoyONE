@@ -6,8 +6,7 @@ import socket
 from typing import TYPE_CHECKING
 
 import voluptuous as vol
-from exoyone import ExoyOne
-from exoyone.models import ExoyOneException, ExoyOneTimeoutError
+from exoyone import ExoyOne, ExoyOneTimeoutError
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS
 from homeassistant.helpers import selector
@@ -52,11 +51,8 @@ class ExoyOneFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 (progress.get("context", {}).get(CONF_HOST) == hostname),
             ):
                 return self.async_abort(reason="already_in_progress")
-        if not (
-            device := await self._async_try_connect(
-                hostname, ip_address, raise_on_progress=True
-            )
-        ):
+
+        if not (device := await _async_try_connect(ip_address)):
             LOGGER.debug("Failed to connect to %s (%s)", hostname, ip_address)
             return self.async_abort(reason="cannot_connect")
 
@@ -72,28 +68,6 @@ class ExoyOneFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 "ip_address": ip_address,
             }
         )
-
-    async def _async_try_connect(
-        self,
-        hostname: str,
-        ip_address: str,
-        raise_on_progress: bool = True,  # noqa: ARG002, FBT001, FBT002
-    ) -> ExoyOne | None:
-        """Try to connect to the ExoyONE."""
-        try:
-            exoyone = ExoyOne(host=ip_address)
-            await exoyone.async_get_data()
-        except socket.gaierror:
-            return None
-        except ExoyOneTimeoutError as exception:
-            if raise_on_progress:
-                raise data_entry_flow.AbortFlow(reason="cannot_connect") from exception
-            return None
-        except ExoyOneException as exception:
-            if raise_on_progress:
-                raise data_entry_flow.AbortFlow(reason="cannot_connect") from exception
-            return None
-        return exoyone
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, str] | None = None
@@ -139,3 +113,15 @@ class ExoyOneFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=_errors,
         )
+
+
+async def _async_try_connect(ip_address: str) -> ExoyOne | None:
+    """Try to connect to the ExoyONE."""
+    try:
+        exoyone = ExoyOne(host=ip_address)
+        await exoyone.async_get_data()
+    except socket.gaierror:
+        return None
+    except ExoyOneTimeoutError as exception:
+        raise data_entry_flow.AbortFlow(reason="cannot_connect") from exception
+    return exoyone

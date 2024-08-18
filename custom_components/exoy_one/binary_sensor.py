@@ -67,8 +67,9 @@ class ExoyOneBinarySensor(ExoyOneEntity, BinarySensorEntity):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._attr_name = entity_description.name
-        self.entity_id = f"binary_sensor.{self.coordinator.exoyone.state.mdnsName}_{entity_description.key}"
-        self._attr_unique_id = f"{self.coordinator.exoyone.state.mdnsName}_binary_sensor_{entity_description.key}"
+        mdns_name = self.coordinator.exoyone.state.mdnsName
+        self.entity_id = f"binary_sensor.{mdns_name}_{entity_description.key}"
+        self._attr_unique_id = f"{mdns_name}_binary_sensor_{entity_description.key}"
 
     @property
     def is_on(self) -> bool:
