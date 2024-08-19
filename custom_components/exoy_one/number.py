@@ -27,6 +27,10 @@ ENTITY_DESCRIPTIONS = (
         icon="mdi:play-speed",
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.SPEED,
+        native_unit_of_measurement="%",
+        native_max_value=100,
+        native_min_value=0,
+        native_step=1,
     ),
     NumberEntityDescription(
         key="cycleSpeed",
@@ -35,6 +39,8 @@ ENTITY_DESCRIPTIONS = (
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement="s",
+        native_max_value=300,
+        mode="box",
     ),
     NumberEntityDescription(
         key="shutdownTimer",
@@ -42,7 +48,10 @@ ENTITY_DESCRIPTIONS = (
         icon="mdi:alarm",
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.DURATION,
-        native_unit_of_measurement="s",
+        native_unit_of_measurement="min",
+        native_max_value=480,
+        native_min_value=0,
+        mode="slider",
     ),
 )
 
@@ -82,6 +91,11 @@ class ExoyOneNumber(ExoyOneEntity, NumberEntity):
         self.entity_id = (
             f"number.{self.coordinator.exoyone.state.mdnsName}_{entity_description.key}"
         )
+
+    @property
+    def native_value(self) -> float:
+        """Return the value of the entity."""
+        return self.coordinator.async_get_sensor_value(self.entity_description.key)
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""

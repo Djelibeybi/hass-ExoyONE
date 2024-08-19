@@ -14,7 +14,6 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 
-from .const import LOGGER
 from .entity import ExoyOneEntity
 
 if TYPE_CHECKING:
@@ -90,11 +89,11 @@ class ExoyOneLight(ExoyOneEntity, LightEntity):
     @property
     def color_mode(self) -> ColorMode:
         """Return current color mode."""
-        if self.coordinator.state.lockColorWheel is True:
-            LOGGER.debug("Color wheel is locked, returning BRIGHTNESS")
-            return ColorMode.BRIGHTNESS
-        LOGGER.debug("Color wheel is unlocked, returning HS")
-        return ColorMode.HS
+        return (
+            ColorMode.BRIGHTNESS
+            if self.coordinator.state.lockColorWheel is True
+            else ColorMode.HS
+        )
 
     @property
     def effect(self) -> str:
