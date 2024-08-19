@@ -30,7 +30,6 @@ class ExoyOneDataUpdateCoordinator(DataUpdateCoordinator):
             logger=LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=3),
-            always_update=False,
         )
         self.mp = mode_packs
 
@@ -56,18 +55,21 @@ class ExoyOneDataUpdateCoordinator(DataUpdateCoordinator):
     def async_is_on(self, key: str) -> bool:
         """Return True if the key is on."""
         if key == "musicSync":
-            return True if self.state.forceMusicSync is True else self.state.musicSync
+            return True if self.state.forceMusicSync else self.state.musicSync
 
         return getattr(self.state, key)
 
     def async_is_available(self, key: str) -> bool:
         """Return true if the key is available."""
-        return not (
-            (self.state.sceneGeneration is True and key in {"musicSync", "autoChange"})
-            or (self.state.forceMusicSync is True and key == "musicSync")
-        )
+        if key == "musicSync":
+            return not self.state.forceMusicSync or self.state.sceneGeneration
 
-    def async_get_sensor_value(self, key: str) -> str | None:
+        if key == "autoChange":
+            return not self.state.sceneGeneration
+
+        return True
+
+    def async_get_sensor_value(self, key: str) -> str | int | None:
         """Return the value of the sensor."""
         if key == "currentModpack":
             return self.mp.get_pack_name_from_index(self.state.currentModpack)
@@ -75,10 +77,22 @@ class ExoyOneDataUpdateCoordinator(DataUpdateCoordinator):
             return self.mp.get_effect_name_from_index(
                 self.state.currentModpack, self.state.modeIndex
             )
+        if key == "speed":
+            return int(self.state.speed / 255 * 100)
+
+        if key == "shutdownTimer":
+            return int(self.state.shutdownTimer / 60)
+
+        if key == "cycleSpeed":
+            return self.state.cycleSpeed
+
         return None
 
     async def async_set_value(self, key: str, value: float) -> None:
         """Set a new value for the specified key."""
+        if key == "speed":
+            value = int(value / 100 * 255)
+
         method = getattr(self.exoyone, get_method_for_attribute(key))
         await method(value)
 
@@ -89,8 +103,11 @@ class ExoyOneDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_turn_off(self, key: str) -> None:
         """Turn off the switch."""
+        if key == "shutdownTimer":
+            return await self.exoyone.set_shutdown_timer(0)
+
         method = getattr(self.exoyone, get_method_for_attribute(key))
-        await method("off")
+        return await method("off")
 
     def async_current_option(self, key: str) -> str:
         """Return the current selected option."""
