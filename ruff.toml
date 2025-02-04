@@ -8,7 +8,7 @@ select = [
 ]
 
 ignore = [
-    "ANN101", # Missing type annotation for `self` in method
+    "A005", # Module shadows a Python standard-library module
     "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
     "D203", # no-blank-line-before-class (incompatible with formatter)
     "D212", # multi-line-summary-first-line (incompatible with formatter)
