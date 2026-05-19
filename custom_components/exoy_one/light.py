@@ -70,8 +70,9 @@ class ExoyOneLight(ExoyOneEntity, LightEntity):
 
     @property
     def is_on(self) -> bool:
-        """Return the state of the light."""
-        return self.coordinator.exoyone.state.fadingOff
+        """Return True if the light is currently emitting."""
+        state = self.coordinator.exoyone.state
+        return state.brightness > 0 and not state.fadingOff
 
     @property
     def brightness(self) -> int:
